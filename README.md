@@ -51,10 +51,10 @@ graph TD
     end
 
     subgraph Server ["Server Layer (Express.js on Node 20)"]
-        API_Chat[/api/ai/chat]
-        API_Crowd[/api/ai/crowd-analysis]
-        API_Trans[/api/ai/translate-phrase]
-        API_Gen[/api/ai/generate-banner]
+        API_Chat["/api/ai/chat"]
+        API_Crowd["/api/ai/crowd-analysis"]
+        API_Trans["/api/ai/translate-phrase"]
+        API_Gen["/api/ai/generate-banner"]
     end
 
     subgraph Gemini ["Google Gemini AI SDK (@google/genai)"]
