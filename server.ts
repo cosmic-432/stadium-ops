@@ -11,6 +11,37 @@ const PORT = 3000;
 
 app.use(express.json({ limit: "10mb" }));
 
+// Security Hardening Middleware (X-Content-Type-Options, X-Frame-Options, CSP, HSTS)
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(self)");
+  next();
+});
+
+// Basic rate limiter in-memory store for API security
+const requestCounts = new Map<string, { count: number; resetTime: number }>();
+app.use("/api/", (req, res, next) => {
+  const ip = req.ip || req.socket.remoteAddress || "unknown";
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minute
+  const maxRequests = 120; // 120 requests per minute limit
+
+  let record = requestCounts.get(ip);
+  if (!record || now > record.resetTime) {
+    record = { count: 1, resetTime: now + windowMs };
+    requestCounts.set(ip, record);
+  } else {
+    record.count++;
+    if (record.count > maxRequests) {
+      return res.status(429).json({ error: "Rate limit exceeded. Please try again later." });
+    }
+  }
+  next();
+});
+
 // Initialize GoogleGenAI safely
 function getAiClient() {
   const apiKey = process.env.GEMINI_API_KEY || "AIzaSyAzSMauf4PBmm-TIOmf3ADIS0n6lnP539w";
